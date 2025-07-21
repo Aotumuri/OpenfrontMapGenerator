@@ -12,9 +12,12 @@ type MapPreviewProps = {
   minLandSize: number;
   generate: boolean;
   onGenerated?: () => void;
+  riverSourceHeight?: number;
+  riverCount?: number;
+  riverHeight?: number;
 };
 
-const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, baseHeight, removePond, minWaterSize, removeLand, minLandSize, generate, onGenerated }) => {
+const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, baseHeight, removePond, minWaterSize, removeLand, minLandSize, generate, onGenerated, riverSourceHeight = 0.5, riverCount = 3, riverHeight = 0.05 }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [zoom, setZoom] = React.useState(1);
   const [offset, setOffset] = React.useState({ x: 0, y: 0 });
@@ -32,31 +35,47 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
     import('../utils/perlin').then(({ generateHeightMap }) => {
       import('../utils/colorMap').then(({ getTerrainColor }) => {
         import('../utils/waterUtils').then(({ removeIsolatedWater, removeIsolatedLand }) => {
-          let heightMap = generateHeightMap(width, height, scale, baseHeight, seed);
-          if (removePond) {
-            const waterThreshold = 0.18;
-            const landHeight = 0.18;
-            heightMap = removeIsolatedWater(heightMap, waterThreshold, minWaterSize, landHeight);
-          }
-          if (removeLand) {
-            const landThreshold = 0.18;
-            const waterHeight = 0.0;
-            heightMap = removeIsolatedLand(heightMap, landThreshold, minLandSize, waterHeight);
-          }
-          const img = ctx.createImageData(width, height);
-          for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-              const v = heightMap[y][x];
-              const [r, g, b] = getTerrainColor(v);
-              const idx = (y * width + x) * 4;
-              img.data[idx] = r;
-              img.data[idx + 1] = g;
-              img.data[idx + 2] = b;
-              img.data[idx + 3] = 255;
+          import('../utils/riverUtils').then(({ addRivers }) => {
+            let heightMap = generateHeightMap(width, height, scale, baseHeight, seed);
+            // 1. 孤立水域・陸地除去（前処理）
+            if (removePond) {
+              const waterThreshold = 0.18;
+              const landHeight = 0.18;
+              heightMap = removeIsolatedWater(heightMap, waterThreshold, minWaterSize, landHeight);
             }
-          }
-          ctx.putImageData(img, 0, 0);
-          onGenerated && onGenerated();
+            if (removeLand) {
+              const landThreshold = 0.18;
+              const waterHeight = 0.0;
+              heightMap = removeIsolatedLand(heightMap, landThreshold, minLandSize, waterHeight);
+            }
+            // 2. 川生成
+            heightMap = addRivers(heightMap, riverSourceHeight, riverCount, seed, riverHeight);
+            // 3. 孤立水域・陸地除去（後処理）
+            // if (removePond) {
+            //   const waterThreshold = 0.18;
+            //   const landHeight = 0.18;
+            //   heightMap = removeIsolatedWater(heightMap, waterThreshold, minWaterSize, landHeight);
+            // }
+            // if (removeLand) {
+            //   const landThreshold = 0.18;
+            //   const waterHeight = 0.0;
+            //   heightMap = removeIsolatedLand(heightMap, landThreshold, minLandSize, waterHeight);
+            // }
+            const img = ctx.createImageData(width, height);
+            for (let y = 0; y < height; y++) {
+              for (let x = 0; x < width; x++) {
+                const v = heightMap[y][x];
+                const [r, g, b] = getTerrainColor(v);
+                const idx = (y * width + x) * 4;
+                img.data[idx] = r;
+                img.data[idx + 1] = g;
+                img.data[idx + 2] = b;
+                img.data[idx + 3] = 255;
+              }
+            }
+            ctx.putImageData(img, 0, 0);
+            onGenerated && onGenerated();
+          });
         });
       });
     });

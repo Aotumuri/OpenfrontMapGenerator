@@ -15,6 +15,10 @@ function App() {
   const [removeLand, setRemoveLand] = useState(true);
   const [minLandSize, setMinLandSize] = useState(1000);
   const [generate, setGenerate] = useState(true);
+  // 川生成用
+  const [riverSourceHeight, setRiverSourceHeight] = useState(0.5);
+  const [riverCount, setRiverCount] = useState(3);
+  const [riverHeight, setRiverHeight] = useState(0.05);
 
   const handleGenerate = () => {
     setGenerate(false);
@@ -35,6 +39,9 @@ function App() {
           removeLand={removeLand}
           minLandSize={minLandSize}
           generate={generate}
+          riverSourceHeight={riverSourceHeight}
+          riverCount={riverCount}
+          riverHeight={riverHeight}
         />
       </div>
       <div style={{ width: 320, background: '#333', padding: 24, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 24, height: '100vh', position: 'fixed', right: 0, top: 0, zIndex: 10, borderLeft: '1px solid #222' }}>
@@ -49,6 +56,12 @@ function App() {
           minWaterSize={minWaterSize}
           removeLand={removeLand}
           minLandSize={minLandSize}
+          riverSourceHeight={riverSourceHeight}
+          setRiverSourceHeight={setRiverSourceHeight}
+          riverCount={riverCount}
+          setRiverCount={setRiverCount}
+          riverHeight={riverHeight}
+          setRiverHeight={setRiverHeight}
           setWidth={setWidth}
           setHeight={setHeight}
           setScale={setScale}

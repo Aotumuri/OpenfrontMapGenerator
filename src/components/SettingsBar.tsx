@@ -10,6 +10,12 @@ type SettingsBarProps = {
   minWaterSize: number;
   removeLand: boolean;
   minLandSize: number;
+  riverSourceHeight: number;
+  setRiverSourceHeight: (v: number) => void;
+  riverCount: number;
+  setRiverCount: (v: number) => void;
+  riverHeight: number;
+  setRiverHeight: (v: number) => void;
   setWidth: (v: number) => void;
   setHeight: (v: number) => void;
   setScale: (v: number) => void;
@@ -22,7 +28,7 @@ type SettingsBarProps = {
   onGenerate: () => void;
 };
 
-const SettingsBar: React.FC<SettingsBarProps> = ({ width, height, scale, seed, baseHeight, removePond, minWaterSize, removeLand, minLandSize, setWidth, setHeight, setScale, setSeed, setBaseHeight, setRemovePond, setMinWaterSize, setRemoveLand, setMinLandSize, onGenerate }) => {
+const SettingsBar: React.FC<SettingsBarProps> = ({ width, height, scale, seed, baseHeight, removePond, minWaterSize, removeLand, minLandSize, riverSourceHeight, setRiverSourceHeight, riverCount, setRiverCount, riverHeight, setRiverHeight, setWidth, setHeight, setScale, setSeed, setBaseHeight, setRemovePond, setMinWaterSize, setRemoveLand, setMinLandSize, onGenerate }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 220 }}>
       <label>
@@ -60,6 +66,18 @@ const SettingsBar: React.FC<SettingsBarProps> = ({ width, height, scale, seed, b
       <label>
         陸地最小連結数: {minLandSize}
         <input type="range" min={1} max={1000} value={minLandSize} onChange={e => setMinLandSize(Number(e.target.value))} />
+      </label>
+      <label>
+        川の本数: {riverCount}
+        <input type="range" min={0} max={10} value={riverCount} onChange={e => setRiverCount(Number(e.target.value))} />
+      </label>
+      <label>
+        川の開始標高: {riverSourceHeight.toFixed(2)}
+        <input type="range" min={0} max={1} step={0.01} value={riverSourceHeight} onChange={e => setRiverSourceHeight(Number(e.target.value))} />
+      </label>
+      <label>
+        川の高さ: {riverHeight.toFixed(2)}
+        <input type="range" min={0} max={0.2} step={0.01} value={riverHeight} onChange={e => setRiverHeight(Number(e.target.value))} />
       </label>
       <button onClick={onGenerate}>生成</button>
     </div>
