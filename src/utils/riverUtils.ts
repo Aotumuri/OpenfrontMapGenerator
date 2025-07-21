@@ -9,71 +9,44 @@ export function addRivers(
   riverSourceHeight: number,
   riverCount: number,
   seed: number,
-  riverHeight: number = 0.05 // 川の高さ（水域より少し高い値）
+  riverHeight: number = 0.02 // 川の高さ（水域より少し高い値）
 ): number[][] {
   const h = heightMap.length;
   const w = heightMap[0]?.length || 0;
   const result = heightMap.map(row => [...row]);
   const rng = mulberry32(seed);
 
-  // 川の開始点候補を集める
+
+  // 川の開始点候補を集める（周囲に自分より低いタイルがある場所のみ）
   const sources: [number, number][] = [];
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      if (heightMap[y][x] >= riverSourceHeight) {
+      if (heightMap[y][x] < riverSourceHeight) continue;
+      let hasLower = false;
+      for (const [dy, dx] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+        const ny = y + dy, nx = x + dx;
+        if (ny < 0 || ny >= h || nx < 0 || nx >= w) continue;
+        if (heightMap[ny][nx] < heightMap[y][x]) {
+          hasLower = true;
+          break;
+        }
+      }
+      if (hasLower) {
         sources.push([y, x]);
       }
     }
   }
   // シャッフルして riverCount 個選ぶ
   shuffle(sources, rng);
+  console.log("sources.length",sources.length);
   const selected = sources.slice(0, riverCount);
 
   for (const [sy, sx] of selected) {
-    let y = sy, x = sx;
-    const riverPath: [number, number][] = [[y, x]];
-    let failed = false;
-    let visited = Array.from({ length: h }, () => Array(w).fill(false));
-    visited[y][x] = true;
-    while (true) {
-      // 隣接タイルのうち、今より低いもの（既に川でない/海でない）を集める
-      const neighbors: [number, number][] = [];
-      let foundSea = false;
-      for (const [dy, dx] of [[1,0],[-1,0],[0,1],[0,-1]]) {
-        const ny = y + dy, nx = x + dx;
-        if (ny < 0 || ny >= h || nx < 0 || nx >= w) continue;
-        if (heightMap[ny][nx] < 0.18) { // 海
-          foundSea = true;
-          break;
-        }
-        if (result[ny][nx] < riverHeight) {
-          // 既に川
-          continue;
-        }
-        if (heightMap[ny][nx] < heightMap[y][x] && !visited[ny][nx]) {
-          neighbors.push([ny, nx]);
-        }
+    const riverPath = findRiverPathBFS(heightMap, sy, sx, riverHeight, rng);
+    if (riverPath) {
+      for (const [py, px] of riverPath) {
+        result[py][px] = riverHeight;
       }
-      if (foundSea) {
-        // 川を描画
-        for (const [py, px] of riverPath) {
-          result[py][px] = riverHeight;
-        }
-        break;
-      }
-      if (neighbors.length === 0) {
-        // 行き止まり: この川は消す
-        failed = true;
-        break;
-      }
-      // ランダムに次のタイルを選ぶ
-      const [ny, nx] = neighbors[Math.floor(rng() * neighbors.length)];
-      y = ny; x = nx;
-      riverPath.push([y, x]);
-      visited[y][x] = true;
-    }
-    if (failed) {
-      // 何もしない（川を描画しない）
     }
   }
   return result;
@@ -95,4 +68,50 @@ function shuffle<T>(arr: T[], rng: () => number) {
     const j = Math.floor(rng() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
+}
+
+function findRiverPathBFS(
+  heightMap: number[][],
+  startY: number,
+  startX: number,
+//   riverHeight: number,
+  seaHeight: number = 0.18,
+  rng: () => number,
+  allowUp = 0.02 // 上昇許容幅
+): [number, number][] | null {
+  const h = heightMap.length;
+  const w = heightMap[0]?.length || 0;
+  const visited = Array.from({ length: h }, () => Array(w).fill(false));
+  const queue: Array<{ y: number; x: number; path: [number, number][]; cost: number }> = [
+    { y: startY, x: startX, path: [[startY, startX]], cost: 0 }
+  ];
+  visited[startY][startX] = true;
+  while (queue.length) {
+    queue.sort((a, b) => a.cost - b.cost);
+    const { y, x, path, cost } = queue.shift()!;
+    if (heightMap[y][x] < seaHeight) {
+      return path;
+    }
+    // 探索順序をランダムにシャッフル
+    const neighbors: [number, number][] = [[1,0],[-1,0],[0,1],[0,-1]];
+    shuffle(neighbors, rng);
+    for (const [dy, dx] of neighbors) {
+      const ny = y + dy, nx = x + dx;
+      if (ny < 0 || ny >= h || nx < 0 || nx >= w) continue;
+      if (visited[ny][nx]) continue;
+      const diff = heightMap[ny][nx] - heightMap[y][x];
+      if (diff < 0 || diff <= allowUp) {
+        visited[ny][nx] = true;
+        // ランダムな微小揺らぎを加える
+        const stepCost = (diff < 0 ? 0 : diff * 10) + rng() * 0.08;
+        queue.push({
+          y: ny,
+          x: nx,
+          path: [...path, [ny, nx]],
+          cost: cost + stepCost
+        });
+      }
+    }
+  }
+  return null;
 }

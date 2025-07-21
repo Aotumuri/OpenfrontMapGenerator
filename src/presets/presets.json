@@ -32,7 +32,7 @@
     "removeLand": true,
     "minLandSize": 5000,
     "riverSourceHeight": 0.6,
-    "riverCount": 10,
+    "riverCount": 25,
     "riverHeight": 0.04,
     "continentMode": true,
     "continentCount": 2,

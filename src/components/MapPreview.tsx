@@ -95,12 +95,12 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
       if (removePond) {
         const waterThreshold = 0.18;
         const landHeight = 0.18;
-        heightMap = removeIsolatedWater(heightMap, waterThreshold, minWaterSize, landHeight);
+        heightMap = removeIsolatedWater(heightMap, waterThreshold, 100, landHeight);
       }
       if (removeLand) {
         const landThreshold = 0.18;
         const waterHeight = 0.0;
-        heightMap = removeIsolatedLand(heightMap, landThreshold, minLandSize, waterHeight);
+        heightMap = removeIsolatedLand(heightMap, landThreshold, 100, waterHeight);
       }
       const img = ctx.createImageData(width, height);
       for (let y = 0; y < height; y++) {
