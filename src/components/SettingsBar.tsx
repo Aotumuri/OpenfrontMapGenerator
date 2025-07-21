@@ -57,7 +57,7 @@ const SettingsBar: React.FC<SettingsBarProps> = ({ width, height, scale, seed, b
       </label>
       <label>
         水域最小連結数: {minWaterSize}
-        <input type="range" min={1} max={1000} value={minWaterSize} onChange={e => setMinWaterSize(Number(e.target.value))} />
+        <input type="range" min={1} max={5000} value={minWaterSize} onChange={e => setMinWaterSize(Number(e.target.value))} />
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <input type="checkbox" checked={removeLand} onChange={e => setRemoveLand(e.target.checked)} />
@@ -65,7 +65,7 @@ const SettingsBar: React.FC<SettingsBarProps> = ({ width, height, scale, seed, b
       </label>
       <label>
         陸地最小連結数: {minLandSize}
-        <input type="range" min={1} max={1000} value={minLandSize} onChange={e => setMinLandSize(Number(e.target.value))} />
+        <input type="range" min={1} max={5000} value={minLandSize} onChange={e => setMinLandSize(Number(e.target.value))} />
       </label>
       <label>
         川の本数: {riverCount}
