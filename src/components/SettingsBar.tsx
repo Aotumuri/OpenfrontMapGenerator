@@ -1,6 +1,9 @@
 import React from "react";
 
 type SettingsBarProps = {
+  presetList: { name: string }[];
+  presetIndex: number;
+  setPresetIndex: (v: number) => void;
   width: number;
   height: number;
   scale: number;
@@ -41,6 +44,9 @@ type SettingsBarProps = {
 };
 
 const SettingsBar: React.FC<SettingsBarProps> = ({
+  presetList,
+  presetIndex,
+  setPresetIndex,
   width,
   height,
   scale,
@@ -77,7 +83,7 @@ const SettingsBar: React.FC<SettingsBarProps> = ({
   smoothStrength,
   setSmoothStrength,
   coarseSmoothMode,
-  setCoarseSmoothMode,
+  setCoarseSmoothMode
 }) => {
   return (
     <div
@@ -88,6 +94,14 @@ const SettingsBar: React.FC<SettingsBarProps> = ({
         minWidth: 220,
       }}
     >
+      <label>
+        プリセット:
+        <select value={presetIndex} onChange={e => setPresetIndex(Number(e.target.value))}>
+          {presetList.map((p, i) => (
+            <option value={i} key={i}>{p.name}</option>
+          ))}
+        </select>
+      </label>
       <label>
         幅: {width}px
         <input

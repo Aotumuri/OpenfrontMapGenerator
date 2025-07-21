@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import presets from './presets/presets.json';
 import './App.css';
 import MapPreview from './components/MapPreview';
 import SettingsBar from './components/SettingsBar';
 
-
 function App() {
-  // 荒い範囲で滑らかに
+  // プリセット管理
+  const [presetList] = useState(presets);
+  const [presetIndex, setPresetIndex] = useState(0);
+  // 既存のuseState群
   const [coarseSmoothMode, setCoarseSmoothMode] = useState(false);
   const [width, setWidth] = useState(256);
   const [height, setHeight] = useState(256);
@@ -30,11 +33,58 @@ function App() {
   const [smoothMode, setSmoothMode] = useState(false);
   const [smoothStrength, setSmoothStrength] = useState(0.5);
 
+  // プリセット選択時にパラメータを反映
+  useEffect(() => {
+    const p = presetList[presetIndex];
+    if (!p) return;
+    setWidth(p.width);
+    setHeight(p.height);
+    setScale(p.scale);
+    setSeed(p.seed);
+    setBaseHeight(p.baseHeight);
+    setRemovePond(p.removePond);
+    setMinWaterSize(p.minWaterSize);
+    setRemoveLand(p.removeLand);
+    setMinLandSize(p.minLandSize);
+    setRiverSourceHeight(p.riverSourceHeight);
+    setRiverCount(p.riverCount);
+    setRiverHeight(p.riverHeight);
+    setContinentMode(p.continentMode);
+    setContinentCount(p.continentCount);
+    setRoughMode(p.roughMode);
+    setSmoothMode(p.smoothMode);
+    setSmoothStrength(p.smoothStrength);
+    setCoarseSmoothMode(p.coarseSmoothMode);
+  }, [presetIndex, presetList]);
+
   const handleGenerate = () => {
     setGenerate(false);
     setTimeout(() => setGenerate(true), 10);
   };
 
+  // プリセット選択時にパラメータを反映
+  useEffect(() => {
+    const p = presetList[presetIndex];
+    if (!p) return;
+    setWidth(p.width);
+    setHeight(p.height);
+    setScale(p.scale);
+    setSeed(p.seed);
+    setBaseHeight(p.baseHeight);
+    setRemovePond(p.removePond);
+    setMinWaterSize(p.minWaterSize);
+    setRemoveLand(p.removeLand);
+    setMinLandSize(p.minLandSize);
+    setRiverSourceHeight(p.riverSourceHeight);
+    setRiverCount(p.riverCount);
+    setRiverHeight(p.riverHeight);
+    setContinentMode(p.continentMode);
+    setContinentCount(p.continentCount);
+    setRoughMode(p.roughMode);
+    setSmoothMode(p.smoothMode);
+    setSmoothStrength(p.smoothStrength);
+    setCoarseSmoothMode(p.coarseSmoothMode);
+  }, [presetIndex, presetList]);
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', background: '#222', color: '#eee', overflow: 'hidden' }}>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0, height: '100vh', overflow: 'hidden' }}>
@@ -63,6 +113,9 @@ function App() {
       <div style={{ width: 320, background: '#333', padding: 24, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 24, height: '100vh', position: 'fixed', right: 0, top: 0, zIndex: 10, borderLeft: '1px solid #222', overflowY: 'auto' }}>
         <h2 style={{ margin: 0 }}>設定</h2>
         <SettingsBar
+          presetList={presetList}
+          presetIndex={presetIndex}
+          setPresetIndex={setPresetIndex}
           width={width}
           height={height}
           scale={scale}
@@ -78,10 +131,6 @@ function App() {
           setRiverCount={setRiverCount}
           riverHeight={riverHeight}
           setRiverHeight={setRiverHeight}
-          continentMode={continentMode}
-          setContinentMode={setContinentMode}
-          continentCount={continentCount}
-          setContinentCount={setContinentCount}
           setWidth={setWidth}
           setHeight={setHeight}
           setScale={setScale}
@@ -92,6 +141,10 @@ function App() {
           setRemoveLand={setRemoveLand}
           setMinLandSize={setMinLandSize}
           onGenerate={handleGenerate}
+          continentMode={continentMode}
+          setContinentMode={setContinentMode}
+          continentCount={continentCount}
+          setContinentCount={setContinentCount}
           roughMode={roughMode}
           setRoughMode={setRoughMode}
           smoothMode={smoothMode}
