@@ -37,11 +37,11 @@ const SettingsBar: React.FC<SettingsBarProps> = ({ width, height, scale, seed, b
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 220 }}>
       <label>
         幅: {width}px
-        <input type="range" min={64} max={512} value={width} onChange={e => setWidth(Number(e.target.value))} />
+        <input type="range" min={100} max={2000} value={width} onChange={e => setWidth(Number(e.target.value))} />
       </label>
       <label>
         高さ: {height}px
-        <input type="range" min={64} max={512} value={height} onChange={e => setHeight(Number(e.target.value))} />
+        <input type="range" min={100} max={2000} value={height} onChange={e => setHeight(Number(e.target.value))} />
       </label>
       <label>
         ノイズスケール: {scale.toFixed(2)}
