@@ -5,6 +5,8 @@ import SettingsBar from './components/SettingsBar';
 
 
 function App() {
+  // 荒い範囲で滑らかに
+  const [coarseSmoothMode, setCoarseSmoothMode] = useState(false);
   const [width, setWidth] = useState(256);
   const [height, setHeight] = useState(256);
   const [scale, setScale] = useState(4.0);
@@ -24,6 +26,9 @@ function App() {
   const [continentCount, setContinentCount] = useState(1);
   // ノイズ強調
   const [roughMode, setRoughMode] = useState(false);
+  // スムージング
+  const [smoothMode, setSmoothMode] = useState(false);
+  const [smoothStrength, setSmoothStrength] = useState(0.5);
 
   const handleGenerate = () => {
     setGenerate(false);
@@ -50,6 +55,9 @@ function App() {
           continentMode={continentMode}
           continentCount={continentCount}
           roughMode={roughMode}
+          smoothMode={smoothMode}
+          smoothStrength={smoothStrength}
+          coarseSmoothMode={coarseSmoothMode}
         />
       </div>
       <div style={{ width: 320, background: '#333', padding: 24, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 24, height: '100vh', position: 'fixed', right: 0, top: 0, zIndex: 10, borderLeft: '1px solid #222', overflowY: 'auto' }}>
@@ -86,6 +94,12 @@ function App() {
           onGenerate={handleGenerate}
           roughMode={roughMode}
           setRoughMode={setRoughMode}
+          smoothMode={smoothMode}
+          setSmoothMode={setSmoothMode}
+          smoothStrength={smoothStrength}
+          setSmoothStrength={setSmoothStrength}
+          coarseSmoothMode={coarseSmoothMode}
+          setCoarseSmoothMode={setCoarseSmoothMode}
         />
         <div style={{ fontSize: 12, color: '#aaa', marginTop: 32 }}>
           パーリンノイズ地形マップ自動生成<br />

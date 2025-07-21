@@ -18,9 +18,12 @@ type MapPreviewProps = {
   continentMode?: boolean;
   continentCount?: number;
   roughMode?: boolean;
+  smoothMode?: boolean;
+  smoothStrength?: number;
+  coarseSmoothMode?: boolean;
 };
 
-const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, baseHeight, removePond, minWaterSize, removeLand, minLandSize, generate, onGenerated, riverSourceHeight = 0.5, riverCount = 3, riverHeight = 0.05, continentMode = false, continentCount = 1, roughMode = false }) => {
+const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, baseHeight, removePond, minWaterSize, removeLand, minLandSize, generate, onGenerated, riverSourceHeight = 0.5, riverCount = 3, riverHeight = 0.05, continentMode = false, continentCount = 1, roughMode = false, smoothMode = false, smoothStrength = 0.5, coarseSmoothMode = false }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [zoom, setZoom] = React.useState(1);
   const [offset, setOffset] = React.useState({ x: 0, y: 0 });
@@ -41,6 +44,7 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
       const { removeIsolatedWater, removeIsolatedLand } = await import('../utils/waterUtils');
       const { addRivers } = await import('../utils/riverUtils');
       const { keepLargestContinents } = await import('../utils/continentUtils');
+      const { smoothHeightMap } = await import('../utils/smoothUtils');
       let heightMap = generateHeightMap(width, height, scale, baseHeight, seed);
       // ノイズ強調: 複数回ノイズ合成で地形をよりランダムに
       if (roughMode) {
@@ -74,6 +78,16 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
         const landThreshold = 0.18;
         const waterHeight = 0.0;
         heightMap = keepLargestContinents(heightMap, landThreshold, continentCount, waterHeight);
+      }
+      // 1.7. スムージング
+      if (smoothMode && smoothStrength > 0) {
+        heightMap = smoothHeightMap(
+          heightMap,
+          smoothStrength,
+          1,
+          coarseSmoothMode ? 'coarse' : 'normal',
+          0.08 // coarseScale: 0.08なら12.5分の1解像度
+        );
       }
       // 2. 川生成
       heightMap = addRivers(heightMap, riverSourceHeight, riverCount, seed, riverHeight);

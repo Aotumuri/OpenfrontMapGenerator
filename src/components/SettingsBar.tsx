@@ -32,6 +32,12 @@ type SettingsBarProps = {
   setContinentCount: (v: number) => void;
   roughMode: boolean;
   setRoughMode: (v: boolean) => void;
+  smoothMode: boolean;
+  setSmoothMode: (v: boolean) => void;
+  smoothStrength: number;
+  setSmoothStrength: (v: number) => void;
+  coarseSmoothMode: boolean;
+  setCoarseSmoothMode: (v: boolean) => void;
 };
 
 const SettingsBar: React.FC<SettingsBarProps> = ({
@@ -66,6 +72,12 @@ const SettingsBar: React.FC<SettingsBarProps> = ({
   setContinentCount,
   roughMode,
   setRoughMode,
+  smoothMode,
+  setSmoothMode,
+  smoothStrength,
+  setSmoothStrength,
+  coarseSmoothMode,
+  setCoarseSmoothMode,
 }) => {
   return (
     <div
@@ -224,6 +236,22 @@ const SettingsBar: React.FC<SettingsBarProps> = ({
         />
         ノイズ強調（地形をよりランダムに）
       </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <input type="checkbox" checked={smoothMode} onChange={e => setSmoothMode(e.target.checked)} />
+        地形を滑らかにする
+      </label>
+      {smoothMode && (
+        <label>
+          滑らかさ: {smoothStrength.toFixed(2)}
+          <input type="range" min={0} max={1} step={0.01} value={smoothStrength} onChange={e => setSmoothStrength(Number(e.target.value))} />
+        </label>
+      )}
+      {smoothMode && (
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input type="checkbox" checked={coarseSmoothMode} onChange={e => setCoarseSmoothMode(e.target.checked)} />
+          荒い範囲で滑らかに
+        </label>
+      )}
       <button onClick={onGenerate}>生成</button>
     </div>
   );
