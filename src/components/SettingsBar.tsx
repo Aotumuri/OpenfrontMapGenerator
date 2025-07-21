@@ -5,14 +5,16 @@ type SettingsBarProps = {
   height: number;
   scale: number;
   seed: number;
+  baseHeight: number;
   setWidth: (v: number) => void;
   setHeight: (v: number) => void;
   setScale: (v: number) => void;
   setSeed: (v: number) => void;
+  setBaseHeight: (v: number) => void;
   onGenerate: () => void;
 };
 
-const SettingsBar: React.FC<SettingsBarProps> = ({ width, height, scale, seed, setWidth, setHeight, setScale, setSeed, onGenerate }) => {
+const SettingsBar: React.FC<SettingsBarProps> = ({ width, height, scale, seed, baseHeight, setWidth, setHeight, setScale, setSeed, setBaseHeight, onGenerate }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 220 }}>
       <label>
@@ -30,6 +32,10 @@ const SettingsBar: React.FC<SettingsBarProps> = ({ width, height, scale, seed, s
       <label>
         シード: {seed}
         <input type="number" min={0} max={9999} value={seed} onChange={e => setSeed(Number(e.target.value))} />
+      </label>
+      <label>
+        基本高さ: {baseHeight.toFixed(2)}
+        <input type="range" min={0} max={1} step={0.01} value={baseHeight} onChange={e => setBaseHeight(Number(e.target.value))} />
       </label>
       <button onClick={onGenerate}>生成</button>
     </div>

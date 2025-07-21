@@ -5,12 +5,13 @@ type MapPreviewProps = {
   height: number;
   seed: number;
   scale: number;
+  baseHeight: number;
   generate: boolean;
   onGenerated?: () => void;
 };
 
 
-const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, generate, onGenerated }) => {
+const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, baseHeight, generate, onGenerated }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [zoom, setZoom] = React.useState(1);
   const [offset, setOffset] = React.useState({ x: 0, y: 0 });
@@ -25,14 +26,13 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, gen
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    import('../utils/perlin').then(({ perlin }) => {
+    import('../utils/perlin').then(({ generateHeightMap }) => {
       import('../utils/colorMap').then(({ getTerrainColor }) => {
+        const heightMap = generateHeightMap(width, height, scale, baseHeight, seed);
         const img = ctx.createImageData(width, height);
         for (let y = 0; y < height; y++) {
           for (let x = 0; x < width; x++) {
-            const nx = x / width * scale;
-            const ny = y / height * scale;
-            const v = perlin(nx, ny, seed);
+            const v = heightMap[y][x];
             const [r, g, b] = getTerrainColor(v);
             const idx = (y * width + x) * 4;
             img.data[idx] = r;
@@ -45,7 +45,7 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, gen
         onGenerated && onGenerated();
       });
     });
-  }, [width, height, seed, scale, generate, onGenerated]);
+  }, [width, height, seed, scale, baseHeight, generate, onGenerated]);
 
   // ドラッグ移動
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {

@@ -1,3 +1,22 @@
+// 指定サイズ・スケール・base・seedで高さマップ2次元配列を生成
+export function generateHeightMap(width: number, height: number, scale: number, base: number, seed = 0): number[][] {
+  const arr: number[][] = [];
+  for (let y = 0; y < height; y++) {
+    const row: number[] = [];
+    for (let x = 0; x < width; x++) {
+      const nx = x / width * scale;
+      const ny = y / height * scale;
+      row.push(perlinWithBaseHeight(nx, ny, base, seed));
+    }
+    arr.push(row);
+  }
+  return arr;
+}
+// パーリンノイズ値から基本高さを引き、0未満は0にする
+export function perlinWithBaseHeight(x: number, y: number, base: number, seed = 0): number {
+  const v = perlin(x, y, seed) - base;
+  return v > 0 ? v : 0;
+}
 // パーリンノイズ生成（シンプルな実装）
 export function perlin(x: number, y: number, seed = 0): number {
   // 乱数生成
