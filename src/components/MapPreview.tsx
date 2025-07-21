@@ -17,9 +17,10 @@ type MapPreviewProps = {
   riverHeight?: number;
   continentMode?: boolean;
   continentCount?: number;
+  roughMode?: boolean;
 };
 
-const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, baseHeight, removePond, minWaterSize, removeLand, minLandSize, generate, onGenerated, riverSourceHeight = 0.5, riverCount = 3, riverHeight = 0.05, continentMode = false, continentCount = 1 }) => {
+const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, baseHeight, removePond, minWaterSize, removeLand, minLandSize, generate, onGenerated, riverSourceHeight = 0.5, riverCount = 3, riverHeight = 0.05, continentMode = false, continentCount = 1, roughMode = false }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [zoom, setZoom] = React.useState(1);
   const [offset, setOffset] = React.useState({ x: 0, y: 0 });
@@ -34,61 +35,74 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    import('../utils/perlin').then(({ generateHeightMap }) => {
-      import('../utils/colorMap').then(({ getTerrainColor }) => {
-        import('../utils/waterUtils').then(({ removeIsolatedWater, removeIsolatedLand }) => {
-          import('../utils/riverUtils').then(({ addRivers }) => {
-            import('../utils/continentUtils').then(({ keepLargestContinents }) => {
-              let heightMap = generateHeightMap(width, height, scale, baseHeight, seed);
-              // 1. 孤立水域・陸地除去（前処理）
-              if (removePond) {
-                const waterThreshold = 0.18;
-                const landHeight = 0.18;
-                heightMap = removeIsolatedWater(heightMap, waterThreshold, minWaterSize, landHeight);
-              }
-              if (removeLand) {
-                const landThreshold = 0.18;
-                const waterHeight = 0.0;
-                heightMap = removeIsolatedLand(heightMap, landThreshold, minLandSize, waterHeight);
-              }
-              // 1.5. 大陸モード
-              if (continentMode) {
-                const landThreshold = 0.18;
-                const waterHeight = 0.0;
-                heightMap = keepLargestContinents(heightMap, landThreshold, continentCount, waterHeight);
-              }
-              // 2. 川生成
-              heightMap = addRivers(heightMap, riverSourceHeight, riverCount, seed, riverHeight);
-              // 3. 孤立水域・陸地除去（後処理）
-              if (removePond) {
-                const waterThreshold = 0.18;
-                const landHeight = 0.18;
-                heightMap = removeIsolatedWater(heightMap, waterThreshold, minWaterSize, landHeight);
-              }
-              if (removeLand) {
-                const landThreshold = 0.18;
-                const waterHeight = 0.0;
-                heightMap = removeIsolatedLand(heightMap, landThreshold, minLandSize, waterHeight);
-              }
-              const img = ctx.createImageData(width, height);
-              for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                  const v = heightMap[y][x];
-                  const [r, g, b] = getTerrainColor(v);
-                  const idx = (y * width + x) * 4;
-                  img.data[idx] = r;
-                  img.data[idx + 1] = g;
-                  img.data[idx + 2] = b;
-                  img.data[idx + 3] = 255;
-                }
-              }
-              ctx.putImageData(img, 0, 0);
-              onGenerated && onGenerated();
-            });
-          });
-        });
-      });
-    });
+    (async () => {
+      const { generateHeightMap, perlin } = await import('../utils/perlin');
+      const { getTerrainColor } = await import('../utils/colorMap');
+      const { removeIsolatedWater, removeIsolatedLand } = await import('../utils/waterUtils');
+      const { addRivers } = await import('../utils/riverUtils');
+      const { keepLargestContinents } = await import('../utils/continentUtils');
+      let heightMap = generateHeightMap(width, height, scale, baseHeight, seed);
+      // ノイズ強調: 複数回ノイズ合成で地形をよりランダムに
+      if (roughMode) {
+        const roughPasses = 10; // 合成回数
+        const roughStrength = 0.18; // 1回あたりの強調度
+        for (let pass = 0; pass < roughPasses; pass++) {
+          const scaleMul = 2 + pass * 1.5;
+          const passSeed = seed + 9999 + pass * 1234;
+          for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+              const nx = x / width * scale * scaleMul;
+              const ny = y / height * scale * scaleMul;
+              heightMap[y][x] = Math.max(0, Math.min(1, heightMap[y][x] + (perlin(nx, ny, passSeed) - 0.5) * roughStrength));
+            }
+          }
+        }
+      }
+      // 1. 孤立水域・陸地除去（前処理）
+      if (removePond) {
+        const waterThreshold = 0.18;
+        const landHeight = 0.18;
+        heightMap = removeIsolatedWater(heightMap, waterThreshold, minWaterSize, landHeight);
+      }
+      if (removeLand) {
+        const landThreshold = 0.18;
+        const waterHeight = 0.0;
+        heightMap = removeIsolatedLand(heightMap, landThreshold, minLandSize, waterHeight);
+      }
+      // 1.5. 大陸モード
+      if (continentMode) {
+        const landThreshold = 0.18;
+        const waterHeight = 0.0;
+        heightMap = keepLargestContinents(heightMap, landThreshold, continentCount, waterHeight);
+      }
+      // 2. 川生成
+      heightMap = addRivers(heightMap, riverSourceHeight, riverCount, seed, riverHeight);
+      // 3. 孤立水域・陸地除去（後処理）
+      if (removePond) {
+        const waterThreshold = 0.18;
+        const landHeight = 0.18;
+        heightMap = removeIsolatedWater(heightMap, waterThreshold, minWaterSize, landHeight);
+      }
+      if (removeLand) {
+        const landThreshold = 0.18;
+        const waterHeight = 0.0;
+        heightMap = removeIsolatedLand(heightMap, landThreshold, minLandSize, waterHeight);
+      }
+      const img = ctx.createImageData(width, height);
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const v = heightMap[y][x];
+          const [r, g, b] = getTerrainColor(v);
+          const idx = (y * width + x) * 4;
+          img.data[idx] = r;
+          img.data[idx + 1] = g;
+          img.data[idx + 2] = b;
+          img.data[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      onGenerated && onGenerated();
+    })();
   }, [width, height, seed, scale, baseHeight, removePond, minWaterSize, removeLand, minLandSize, generate, onGenerated]);
 
   // ドラッグ移動

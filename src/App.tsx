@@ -22,6 +22,8 @@ function App() {
   // 大陸モード
   const [continentMode, setContinentMode] = useState(false);
   const [continentCount, setContinentCount] = useState(1);
+  // ノイズ強調
+  const [roughMode, setRoughMode] = useState(false);
 
   const handleGenerate = () => {
     setGenerate(false);
@@ -47,6 +49,7 @@ function App() {
           riverHeight={riverHeight}
           continentMode={continentMode}
           continentCount={continentCount}
+          roughMode={roughMode}
         />
       </div>
       <div style={{ width: 320, background: '#333', padding: 24, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 24, height: '100vh', position: 'fixed', right: 0, top: 0, zIndex: 10, borderLeft: '1px solid #222' }}>
@@ -81,6 +84,8 @@ function App() {
           setRemoveLand={setRemoveLand}
           setMinLandSize={setMinLandSize}
           onGenerate={handleGenerate}
+          roughMode={roughMode}
+          setRoughMode={setRoughMode}
         />
         <div style={{ fontSize: 12, color: '#aaa', marginTop: 32 }}>
           パーリンノイズ地形マップ自動生成<br />
