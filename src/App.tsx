@@ -52,7 +52,7 @@ function App() {
           roughMode={roughMode}
         />
       </div>
-      <div style={{ width: 320, background: '#333', padding: 24, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 24, height: '100vh', position: 'fixed', right: 0, top: 0, zIndex: 10, borderLeft: '1px solid #222' }}>
+      <div style={{ width: 320, background: '#333', padding: 24, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 24, height: '100vh', position: 'fixed', right: 0, top: 0, zIndex: 10, borderLeft: '1px solid #222', overflowY: 'auto' }}>
         <h2 style={{ margin: 0 }}>設定</h2>
         <SettingsBar
           width={width}
