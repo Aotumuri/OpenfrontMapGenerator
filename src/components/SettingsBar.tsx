@@ -26,9 +26,13 @@ type SettingsBarProps = {
   setRemoveLand: (v: boolean) => void;
   setMinLandSize: (v: number) => void;
   onGenerate: () => void;
+  continentMode: boolean;
+  setContinentMode: (v: boolean) => void;
+  continentCount: number;
+  setContinentCount: (v: number) => void;
 };
 
-const SettingsBar: React.FC<SettingsBarProps> = ({ width, height, scale, seed, baseHeight, removePond, minWaterSize, removeLand, minLandSize, riverSourceHeight, setRiverSourceHeight, riverCount, setRiverCount, riverHeight, setRiverHeight, setWidth, setHeight, setScale, setSeed, setBaseHeight, setRemovePond, setMinWaterSize, setRemoveLand, setMinLandSize, onGenerate }) => {
+const SettingsBar: React.FC<SettingsBarProps> = ({ width, height, scale, seed, baseHeight, removePond, minWaterSize, removeLand, minLandSize, riverSourceHeight, setRiverSourceHeight, riverCount, setRiverCount, riverHeight, setRiverHeight, setWidth, setHeight, setScale, setSeed, setBaseHeight, setRemovePond, setMinWaterSize, setRemoveLand, setMinLandSize, onGenerate, continentMode, setContinentMode, continentCount, setContinentCount }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 220 }}>
       <label>
@@ -79,6 +83,16 @@ const SettingsBar: React.FC<SettingsBarProps> = ({ width, height, scale, seed, b
         川の高さ: {riverHeight.toFixed(2)}
         <input type="range" min={0} max={0.2} step={0.01} value={riverHeight} onChange={e => setRiverHeight(Number(e.target.value))} />
       </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <input type="checkbox" checked={continentMode} onChange={e => setContinentMode(e.target.checked)} />
+        大陸モード（大きい大陸だけ残す）
+      </label>
+      {continentMode && (
+        <label>
+          大陸の個数: {continentCount}
+          <input type="range" min={1} max={10} value={continentCount} onChange={e => setContinentCount(Number(e.target.value))} />
+        </label>
+      )}
       <button onClick={onGenerate}>生成</button>
     </div>
   );

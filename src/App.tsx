@@ -19,6 +19,9 @@ function App() {
   const [riverSourceHeight, setRiverSourceHeight] = useState(0.5);
   const [riverCount, setRiverCount] = useState(3);
   const [riverHeight, setRiverHeight] = useState(0.05);
+  // 大陸モード
+  const [continentMode, setContinentMode] = useState(false);
+  const [continentCount, setContinentCount] = useState(1);
 
   const handleGenerate = () => {
     setGenerate(false);
@@ -42,6 +45,8 @@ function App() {
           riverSourceHeight={riverSourceHeight}
           riverCount={riverCount}
           riverHeight={riverHeight}
+          continentMode={continentMode}
+          continentCount={continentCount}
         />
       </div>
       <div style={{ width: 320, background: '#333', padding: 24, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 24, height: '100vh', position: 'fixed', right: 0, top: 0, zIndex: 10, borderLeft: '1px solid #222' }}>
@@ -62,6 +67,10 @@ function App() {
           setRiverCount={setRiverCount}
           riverHeight={riverHeight}
           setRiverHeight={setRiverHeight}
+          continentMode={continentMode}
+          setContinentMode={setContinentMode}
+          continentCount={continentCount}
+          setContinentCount={setContinentCount}
           setWidth={setWidth}
           setHeight={setHeight}
           setScale={setScale}
