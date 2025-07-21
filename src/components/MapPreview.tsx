@@ -6,12 +6,15 @@ type MapPreviewProps = {
   seed: number;
   scale: number;
   baseHeight: number;
+  removePond: boolean;
+  minWaterSize: number;
+  removeLand: boolean;
+  minLandSize: number;
   generate: boolean;
   onGenerated?: () => void;
 };
 
-
-const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, baseHeight, generate, onGenerated }) => {
+const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, baseHeight, removePond, minWaterSize, removeLand, minLandSize, generate, onGenerated }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [zoom, setZoom] = React.useState(1);
   const [offset, setOffset] = React.useState({ x: 0, y: 0 });
@@ -28,24 +31,36 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
     if (!ctx) return;
     import('../utils/perlin').then(({ generateHeightMap }) => {
       import('../utils/colorMap').then(({ getTerrainColor }) => {
-        const heightMap = generateHeightMap(width, height, scale, baseHeight, seed);
-        const img = ctx.createImageData(width, height);
-        for (let y = 0; y < height; y++) {
-          for (let x = 0; x < width; x++) {
-            const v = heightMap[y][x];
-            const [r, g, b] = getTerrainColor(v);
-            const idx = (y * width + x) * 4;
-            img.data[idx] = r;
-            img.data[idx + 1] = g;
-            img.data[idx + 2] = b;
-            img.data[idx + 3] = 255;
+        import('../utils/waterUtils').then(({ removeIsolatedWater, removeIsolatedLand }) => {
+          let heightMap = generateHeightMap(width, height, scale, baseHeight, seed);
+          if (removePond) {
+            const waterThreshold = 0.18;
+            const landHeight = 0.18;
+            heightMap = removeIsolatedWater(heightMap, waterThreshold, minWaterSize, landHeight);
           }
-        }
-        ctx.putImageData(img, 0, 0);
-        onGenerated && onGenerated();
+          if (removeLand) {
+            const landThreshold = 0.18;
+            const waterHeight = 0.0;
+            heightMap = removeIsolatedLand(heightMap, landThreshold, minLandSize, waterHeight);
+          }
+          const img = ctx.createImageData(width, height);
+          for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+              const v = heightMap[y][x];
+              const [r, g, b] = getTerrainColor(v);
+              const idx = (y * width + x) * 4;
+              img.data[idx] = r;
+              img.data[idx + 1] = g;
+              img.data[idx + 2] = b;
+              img.data[idx + 3] = 255;
+            }
+          }
+          ctx.putImageData(img, 0, 0);
+          onGenerated && onGenerated();
+        });
       });
     });
-  }, [width, height, seed, scale, baseHeight, generate, onGenerated]);
+  }, [width, height, seed, scale, baseHeight, removePond, minWaterSize, removeLand, minLandSize, generate, onGenerated]);
 
   // ドラッグ移動
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
