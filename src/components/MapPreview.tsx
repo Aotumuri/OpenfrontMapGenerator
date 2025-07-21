@@ -64,6 +64,18 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, gen
     lastPos.current = null;
   };
 
+  // ピンチズーム・トラックパッドズーム・Ctrl+ホイール
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      setZoom(z => {
+        let next = z - e.deltaY * 0.002;
+        next = Math.max(0.2, Math.min(5, next));
+        return next;
+      });
+    }
+  };
+
   // タッチ: ピンチズームと移動
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     if (e.touches.length === 1) {
@@ -73,6 +85,11 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, gen
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       lastDist.current = Math.sqrt(dx * dx + dy * dy);
+      // ピンチ中心を基準にズーム位置も調整
+      const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      lastPos.current = { x: centerX, y: centerY };
+      lastOffset.current = { ...offset };
     }
   };
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
@@ -85,7 +102,8 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, gen
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const dist = Math.sqrt(dx * dx + dy * dy);
       setZoom(z => {
-        const next = Math.max(0.2, Math.min(5, z * (dist / lastDist.current!)));
+        let next = z * (dist / lastDist.current!);
+        next = Math.max(0.2, Math.min(5, next));
         lastDist.current = dist;
         return next;
       });
@@ -109,7 +127,11 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, gen
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onWheel={handleWheel}
     >
+      <div style={{ position: 'absolute', left: 16, top: 16, zIndex: 2, background: 'rgba(34,34,34,0.7)', color: '#fff', borderRadius: 8, padding: '2px 12px', fontSize: 16 }}>
+        {(zoom * 100).toFixed(0)}%
+      </div>
       <canvas
         ref={canvasRef}
         width={width}
