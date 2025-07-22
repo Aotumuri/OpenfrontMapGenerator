@@ -18,7 +18,10 @@
     "roughMode": false,
     "smoothMode": false,
     "smoothStrength": 0.5,
-    "coarseSmoothMode": false
+    "coarseSmoothMode": false,
+    "globalNoiseMode": false,
+    "globalNoiseScale": 3,
+    "globalNoiseStrength": 0.5
   },
   {
     "name": "大陸+川多め",
@@ -39,6 +42,9 @@
     "roughMode": true,
     "smoothMode": true,
     "smoothStrength": 0.4,
-    "coarseSmoothMode": true
+    "coarseSmoothMode": true,
+    "globalNoiseMode": true,
+    "globalNoiseScale": 3,
+    "globalNoiseStrength": 0.5
   }
 ]

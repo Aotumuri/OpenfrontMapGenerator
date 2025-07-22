@@ -32,6 +32,10 @@ function App() {
   // スムージング
   const [smoothMode, setSmoothMode] = useState(false);
   const [smoothStrength, setSmoothStrength] = useState(0.5);
+  // global noise
+  const [globalNoiseMode, setGlobalNoiseMode] = useState(false);
+  const [globalNoiseScale, setGlobalNoiseScale] = useState(0.3);
+  const [globalNoiseStrength, setGlobalNoiseStrength] = useState(0.5);
 
   // プリセット選択時にパラメータを反映
   useEffect(() => {
@@ -55,6 +59,9 @@ function App() {
     setSmoothMode(p.smoothMode);
     setSmoothStrength(p.smoothStrength);
     setCoarseSmoothMode(p.coarseSmoothMode);
+    setGlobalNoiseMode(p.globalNoiseMode ?? false);
+    setGlobalNoiseScale(p.globalNoiseScale ?? 0.3);
+    setGlobalNoiseStrength(p.globalNoiseStrength ?? 0.5);
   }, [presetIndex, presetList]);
 
   const handleGenerate = () => {
@@ -84,6 +91,9 @@ function App() {
     setSmoothMode(p.smoothMode);
     setSmoothStrength(p.smoothStrength);
     setCoarseSmoothMode(p.coarseSmoothMode);
+    setGlobalNoiseMode(p.globalNoiseMode);
+    setGlobalNoiseScale(p.globalNoiseScale);
+    setGlobalNoiseStrength(p.globalNoiseStrength);
   }, [presetIndex, presetList]);
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', background: '#222', color: '#eee', overflow: 'hidden' }}>
@@ -108,6 +118,9 @@ function App() {
           smoothMode={smoothMode}
           smoothStrength={smoothStrength}
           coarseSmoothMode={coarseSmoothMode}
+          globalNoiseMode={globalNoiseMode}
+          globalNoiseScale={globalNoiseScale}
+          globalNoiseStrength={globalNoiseStrength}
         />
       </div>
       <div style={{ width: 320, background: '#333', padding: 24, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 24, height: '100vh', position: 'fixed', right: 0, top: 0, zIndex: 10, borderLeft: '1px solid #222', overflowY: 'auto' }}>
@@ -153,6 +166,12 @@ function App() {
           setSmoothStrength={setSmoothStrength}
           coarseSmoothMode={coarseSmoothMode}
           setCoarseSmoothMode={setCoarseSmoothMode}
+          globalNoiseMode={globalNoiseMode}
+          setGlobalNoiseMode={setGlobalNoiseMode}
+          globalNoiseScale={globalNoiseScale}
+          setGlobalNoiseScale={setGlobalNoiseScale}
+          globalNoiseStrength={globalNoiseStrength}
+          setGlobalNoiseStrength={setGlobalNoiseStrength}
         />
         <div style={{ fontSize: 12, color: '#aaa', marginTop: 32 }}>
           パーリンノイズ地形マップ自動生成<br />

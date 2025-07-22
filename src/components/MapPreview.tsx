@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 type MapPreviewProps = {
   width: number;
@@ -21,9 +21,36 @@ type MapPreviewProps = {
   smoothMode?: boolean;
   smoothStrength?: number;
   coarseSmoothMode?: boolean;
+  globalNoiseMode?: boolean;
+  globalNoiseScale?: number;
+  globalNoiseStrength?: number;
 };
-
-const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, baseHeight, removePond, minWaterSize, removeLand, minLandSize, generate, onGenerated, riverSourceHeight = 0.5, riverCount = 3, riverHeight = 0.05, continentMode = false, continentCount = 1, roughMode = false, smoothMode = false, smoothStrength = 0.5, coarseSmoothMode = false }) => {
+const MapPreview: React.FC<MapPreviewProps> = (props) => {
+  const {
+    width,
+    height,
+    seed,
+    scale,
+    baseHeight,
+    removePond,
+    minWaterSize,
+    removeLand,
+    minLandSize,
+    generate,
+    onGenerated,
+    riverSourceHeight = 0.5,
+    riverCount = 3,
+    riverHeight = 0.05,
+    continentMode = false,
+    continentCount = 1,
+    roughMode = false,
+    smoothMode = false,
+    smoothStrength = 0.5,
+    coarseSmoothMode = false,
+    globalNoiseMode = false,
+    globalNoiseScale = 0.3,
+    globalNoiseStrength = 0.5,
+  } = props;
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [zoom, setZoom] = React.useState(1);
   const [offset, setOffset] = React.useState({ x: 0, y: 0 });
@@ -36,15 +63,17 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
     if (!generate) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
     (async () => {
-      const { generateHeightMap, perlin } = await import('../utils/perlin');
-      const { getTerrainColor } = await import('../utils/colorMap');
-      const { removeIsolatedWater, removeIsolatedLand } = await import('../utils/waterUtils');
-      const { addRivers } = await import('../utils/riverUtils');
-      const { keepLargestContinents } = await import('../utils/continentUtils');
-      const { smoothHeightMap } = await import('../utils/smoothUtils');
+      const { generateHeightMap, perlin } = await import("../utils/perlin");
+      const { getTerrainColor } = await import("../utils/colorMap");
+      const { removeIsolatedWater, removeIsolatedLand } = await import(
+        "../utils/waterUtils"
+      );
+      const { addRivers } = await import("../utils/riverUtils");
+      const { keepLargestContinents } = await import("../utils/continentUtils");
+      const { smoothHeightMap } = await import("../utils/smoothUtils");
       let heightMap = generateHeightMap(width, height, scale, baseHeight, seed);
       // ノイズ強調: 複数回ノイズ合成で地形をよりランダムに
       if (roughMode) {
@@ -55,10 +84,32 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
           const passSeed = seed + 9999 + pass * 1234;
           for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
-              const nx = x / width * scale * scaleMul;
-              const ny = y / height * scale * scaleMul;
-              heightMap[y][x] = Math.max(0, Math.min(1, heightMap[y][x] + (perlin(nx, ny, passSeed) - 0.5) * roughStrength));
+              const nx = (x / width) * scale * scaleMul;
+              const ny = (y / height) * scale * scaleMul;
+              heightMap[y][x] = Math.max(
+                0,
+                Math.min(
+                  1,
+                  heightMap[y][x] +
+                    (perlin(nx, ny, passSeed) - 0.5) * roughStrength
+                )
+              );
             }
+          }
+        }
+      }
+      // === 全体ノイズ強調（広域高低差） ===
+      if (globalNoiseMode && globalNoiseStrength > 0) {
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            const nx = (x / width) * scale * globalNoiseScale;
+            const ny = (y / height) * scale * globalNoiseScale;
+            const noise = perlin(nx, ny, seed + 123456);
+            const factor = 1 + (noise - 0.5) * 2 * globalNoiseStrength;
+            heightMap[y][x] = Math.max(
+              0,
+              Math.min(1, heightMap[y][x] * factor)
+            );
           }
         }
       }
@@ -66,18 +117,33 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
       if (removePond) {
         const waterThreshold = 0.18;
         const landHeight = 0.18;
-        heightMap = removeIsolatedWater(heightMap, waterThreshold, minWaterSize, landHeight);
+        heightMap = removeIsolatedWater(
+          heightMap,
+          waterThreshold,
+          minWaterSize,
+          landHeight
+        );
       }
       if (removeLand) {
         const landThreshold = 0.18;
         const waterHeight = 0.0;
-        heightMap = removeIsolatedLand(heightMap, landThreshold, minLandSize, waterHeight);
+        heightMap = removeIsolatedLand(
+          heightMap,
+          landThreshold,
+          minLandSize,
+          waterHeight
+        );
       }
       // 1.5. 大陸モード
       if (continentMode) {
         const landThreshold = 0.18;
         const waterHeight = 0.0;
-        heightMap = keepLargestContinents(heightMap, landThreshold, continentCount, waterHeight);
+        heightMap = keepLargestContinents(
+          heightMap,
+          landThreshold,
+          continentCount,
+          waterHeight
+        );
       }
       // 1.7. スムージング
       if (smoothMode && smoothStrength > 0) {
@@ -85,7 +151,7 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
           heightMap,
           smoothStrength,
           1,
-          coarseSmoothMode ? 'coarse' : 'normal',
+          coarseSmoothMode ? "coarse" : "normal",
           0.08 // coarseScale: 0.08なら12.5分の1解像度
         );
       }
@@ -94,25 +160,51 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
       if (removePond) {
         const waterThreshold = 0.18;
         const landHeight = 0.18;
-        heightMap = removeIsolatedWater(heightMap, waterThreshold, minWaterSize, landHeight);
+        heightMap = removeIsolatedWater(
+          heightMap,
+          waterThreshold,
+          minWaterSize,
+          landHeight
+        );
       }
       if (removeLand) {
         const landThreshold = 0.18;
         const waterHeight = 0.0;
-        heightMap = removeIsolatedLand(heightMap, landThreshold, minLandSize, waterHeight);
+        heightMap = removeIsolatedLand(
+          heightMap,
+          landThreshold,
+          minLandSize,
+          waterHeight
+        );
       }
       // 2. 川生成
-      heightMap = addRivers(heightMap, riverSourceHeight, riverCount, seed, riverHeight);
+      heightMap = addRivers(
+        heightMap,
+        riverSourceHeight,
+        riverCount,
+        seed,
+        riverHeight
+      );
       // 3. 孤立水域・陸地除去（後処理）
       if (removePond) {
         const waterThreshold = 0.18;
         const landHeight = 0.18;
-        heightMap = removeIsolatedWater(heightMap, waterThreshold, 100, landHeight);
+        heightMap = removeIsolatedWater(
+          heightMap,
+          waterThreshold,
+          100,
+          landHeight
+        );
       }
       if (removeLand) {
         const landThreshold = 0.18;
         const waterHeight = 0.0;
-        heightMap = removeIsolatedLand(heightMap, landThreshold, 100, waterHeight);
+        heightMap = removeIsolatedLand(
+          heightMap,
+          landThreshold,
+          100,
+          waterHeight
+        );
       }
       const img = ctx.createImageData(width, height);
       for (let y = 0; y < height; y++) {
@@ -129,7 +221,19 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
       ctx.putImageData(img, 0, 0);
       onGenerated && onGenerated();
     })();
-  }, [width, height, seed, scale, baseHeight, removePond, minWaterSize, removeLand, minLandSize, generate, onGenerated]);
+  }, [
+    width,
+    height,
+    seed,
+    scale,
+    baseHeight,
+    removePond,
+    minWaterSize,
+    removeLand,
+    minLandSize,
+    generate,
+    onGenerated,
+  ]);
 
   // ドラッグ移動
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -152,7 +256,7 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
-      setZoom(z => {
+      setZoom((z) => {
         let next = z - e.deltaY * 0.002;
         next = Math.max(0.2, Math.min(5, next));
         return next;
@@ -185,7 +289,7 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      setZoom(z => {
+      setZoom((z) => {
         let next = z * (dist / lastDist.current!);
         next = Math.max(0.2, Math.min(5, next));
         lastDist.current = dist;
@@ -203,7 +307,14 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
   // 画面いっぱいに拡大縮小・移動できるように
   return (
     <div
-      style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', userSelect: 'none', touchAction: 'none' }}
+      style={{
+        width: "100%",
+        height: "100%",
+        position: "relative",
+        overflow: "hidden",
+        userSelect: "none",
+        touchAction: "none",
+      }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -213,7 +324,19 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
       onTouchEnd={handleTouchEnd}
       onWheel={handleWheel}
     >
-      <div style={{ position: 'absolute', left: 16, top: 16, zIndex: 2, background: 'rgba(34,34,34,0.7)', color: '#fff', borderRadius: 8, padding: '2px 12px', fontSize: 16 }}>
+      <div
+        style={{
+          position: "absolute",
+          left: 16,
+          top: 16,
+          zIndex: 2,
+          background: "rgba(34,34,34,0.7)",
+          color: "#fff",
+          borderRadius: 8,
+          padding: "2px 12px",
+          fontSize: 16,
+        }}
+      >
         {(zoom * 100).toFixed(0)}%
       </div>
       <canvas
@@ -221,15 +344,15 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
         width={width}
         height={height}
         style={{
-          position: 'absolute',
+          position: "absolute",
           left: 0,
           top: 0,
           width: width * zoom,
           height: height * zoom,
           transform: `translate(${offset.x}px, ${offset.y}px)`,
-          background: '#222',
-          touchAction: 'none',
-          cursor: dragging ? 'grabbing' : 'grab',
+          background: "#222",
+          touchAction: "none",
+          cursor: dragging ? "grabbing" : "grab",
         }}
       />
     </div>

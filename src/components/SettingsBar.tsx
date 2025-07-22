@@ -41,6 +41,12 @@ type SettingsBarProps = {
   setSmoothStrength: (v: number) => void;
   coarseSmoothMode: boolean;
   setCoarseSmoothMode: (v: boolean) => void;
+  globalNoiseMode: boolean;
+  setGlobalNoiseMode: (v: boolean) => void;
+  globalNoiseScale: number;
+  setGlobalNoiseScale: (v: number) => void;
+  globalNoiseStrength: number;
+  setGlobalNoiseStrength: (v: number) => void;
 };
 
 const SettingsBar: React.FC<SettingsBarProps> = ({
@@ -83,7 +89,13 @@ const SettingsBar: React.FC<SettingsBarProps> = ({
   smoothStrength,
   setSmoothStrength,
   coarseSmoothMode,
-  setCoarseSmoothMode
+  setCoarseSmoothMode,
+  globalNoiseMode,
+  setGlobalNoiseMode,
+  globalNoiseScale,
+  setGlobalNoiseScale,
+  globalNoiseStrength,
+  setGlobalNoiseStrength
 }) => {
   return (
     <div
@@ -264,6 +276,40 @@ const SettingsBar: React.FC<SettingsBarProps> = ({
         <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <input type="checkbox" checked={coarseSmoothMode} onChange={e => setCoarseSmoothMode(e.target.checked)} />
           荒い範囲で滑らかに
+        </label>
+      )}
+      <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <input
+          type="checkbox"
+          checked={globalNoiseMode}
+          onChange={e => setGlobalNoiseMode(e.target.checked)}
+        />
+        地形全体にノイズを適用
+      </label>
+      {globalNoiseMode && (
+        <label>
+          ノイズスケール: {globalNoiseScale.toFixed(2)}
+          <input
+            type="range"
+            min={0.01}
+            max={1}
+            step={0.01}
+            value={globalNoiseScale}
+            onChange={e => setGlobalNoiseScale(Number(e.target.value))}
+          />
+        </label>
+      )}
+      {globalNoiseMode && (
+        <label>
+          ノイズ強さ: {globalNoiseStrength.toFixed(2)}
+          <input
+            type="range"
+            min={0}
+            max={3}
+            step={0.01}
+            value={globalNoiseStrength}
+            onChange={e => setGlobalNoiseStrength(Number(e.target.value))}
+          />
         </label>
       )}
       <button onClick={onGenerate}>生成</button>
