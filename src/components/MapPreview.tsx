@@ -89,6 +89,18 @@ const MapPreview: React.FC<MapPreviewProps> = ({ width, height, seed, scale, bas
           0.08 // coarseScale: 0.08なら12.5分の1解像度
         );
       }
+
+      // 1.9. 孤立水域・陸地除去（中処理）
+      if (removePond) {
+        const waterThreshold = 0.18;
+        const landHeight = 0.18;
+        heightMap = removeIsolatedWater(heightMap, waterThreshold, minWaterSize, landHeight);
+      }
+      if (removeLand) {
+        const landThreshold = 0.18;
+        const waterHeight = 0.0;
+        heightMap = removeIsolatedLand(heightMap, landThreshold, minLandSize, waterHeight);
+      }
       // 2. 川生成
       heightMap = addRivers(heightMap, riverSourceHeight, riverCount, seed, riverHeight);
       // 3. 孤立水域・陸地除去（後処理）

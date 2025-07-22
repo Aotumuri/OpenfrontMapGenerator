@@ -11,6 +11,7 @@ export function addRivers(
   seed: number,
   riverHeight: number = 0.02 // 川の高さ（水域より少し高い値）
 ): number[][] {
+  const isLand = heightMap.map(row => row.map(v => v >= 0.18));
   const h = heightMap.length;
   const w = heightMap[0]?.length || 0;
   const result = heightMap.map(row => [...row]);
@@ -42,7 +43,7 @@ export function addRivers(
   const selected = sources.slice(0, riverCount);
 
   for (const [sy, sx] of selected) {
-    const riverPath = findRiverPathBFS(heightMap, sy, sx, riverHeight, rng);
+    const riverPath = findRiverPathBFS(heightMap, isLand, sy, sx, riverHeight, rng);
     if (riverPath) {
       for (const [py, px] of riverPath) {
         result[py][px] = riverHeight;
@@ -72,6 +73,7 @@ function shuffle<T>(arr: T[], rng: () => number) {
 
 function findRiverPathBFS(
   heightMap: number[][],
+  isLand: boolean[][],
   startY: number,
   startX: number,
 //   riverHeight: number,
@@ -89,7 +91,7 @@ function findRiverPathBFS(
   while (queue.length) {
     queue.sort((a, b) => a.cost - b.cost);
     const { y, x, path, cost } = queue.shift()!;
-    if (heightMap[y][x] < seaHeight) {
+    if (!isLand[y][x]) {
       return path;
     }
     // 探索順序をランダムにシャッフル
@@ -103,7 +105,7 @@ function findRiverPathBFS(
       if (diff < 0 || diff <= allowUp) {
         visited[ny][nx] = true;
         // ランダムな微小揺らぎを加える
-        const stepCost = (diff < 0 ? 0 : diff * 10) + rng() * 0.08;
+        const stepCost = (diff < 0 ? 0 : diff * 10) + rng() * 0.1;
         queue.push({
           y: ny,
           x: nx,
