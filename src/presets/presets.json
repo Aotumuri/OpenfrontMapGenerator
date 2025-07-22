@@ -29,7 +29,7 @@
     "height": 1000,
     "scale": 6.0,
     "seed": 1234,
-    "baseHeight": 0.18,
+    "baseHeight": 0.2,
     "removePond": true,
     "minWaterSize": 5000,
     "removeLand": true,
@@ -44,7 +44,7 @@
     "smoothStrength": 0.4,
     "coarseSmoothMode": true,
     "globalNoiseMode": true,
-    "globalNoiseScale": 3,
-    "globalNoiseStrength": 0.5
+    "globalNoiseScale": 0.8,
+    "globalNoiseStrength": 1.5
   }
 ]
