@@ -43,7 +43,7 @@ export function addRivers(
   const selected = sources.slice(0, riverCount);
 
   for (const [sy, sx] of selected) {
-    const riverPath = findRiverPathBFS(heightMap, isLand, sy, sx, riverHeight, rng);
+    const riverPath = findRiverPathBFS(heightMap, isLand, sy, sx, rng);
     if (riverPath) {
       for (const [py, px] of riverPath) {
         result[py][px] = riverHeight;
@@ -71,30 +71,63 @@ function shuffle<T>(arr: T[], rng: () => number) {
   }
 }
 
+// 最小ヒープ（簡易実装）
+class MinHeap<T> {
+  arr: T[] = [];
+  getKey: (x: T) => number;
+  constructor(getKey: (x: T) => number) {
+    this.getKey = getKey;
+  }
+  push(val: T) {
+    this.arr.push(val);
+    let i = this.arr.length - 1;
+    while (i > 0) {
+      let p = (i - 1) >> 1;
+      if (this.getKey(this.arr[p]) <= this.getKey(this.arr[i])) break;
+      [this.arr[p], this.arr[i]] = [this.arr[i], this.arr[p]];
+      i = p;
+    }
+  }
+  pop(): T | undefined {
+    if (this.arr.length === 0) return undefined;
+    const top = this.arr[0];
+    const last = this.arr.pop()!;
+    if (this.arr.length > 0) {
+      this.arr[0] = last;
+      let i = 0;
+      while (true) {
+        let l = 2 * i + 1, r = 2 * i + 2, smallest = i;
+        if (l < this.arr.length && this.getKey(this.arr[l]) < this.getKey(this.arr[smallest])) smallest = l;
+        if (r < this.arr.length && this.getKey(this.arr[r]) < this.getKey(this.arr[smallest])) smallest = r;
+        if (smallest === i) break;
+        [this.arr[i], this.arr[smallest]] = [this.arr[smallest], this.arr[i]];
+        i = smallest;
+      }
+    }
+    return top;
+  }
+  get length() { return this.arr.length; }
+}
+
 function findRiverPathBFS(
   heightMap: number[][],
   isLand: boolean[][],
   startY: number,
   startX: number,
-//   riverHeight: number,
-  seaHeight: number = 0.18,
   rng: () => number,
   allowUp = 0.02 // 上昇許容幅
 ): [number, number][] | null {
   const h = heightMap.length;
   const w = heightMap[0]?.length || 0;
   const visited = Array.from({ length: h }, () => Array(w).fill(false));
-  const queue: Array<{ y: number; x: number; path: [number, number][]; cost: number }> = [
-    { y: startY, x: startX, path: [[startY, startX]], cost: 0 }
-  ];
+  const queue = new MinHeap<{ y: number; x: number; path: [number, number][]; cost: number }>(o => o.cost);
+  queue.push({ y: startY, x: startX, path: [[startY, startX]], cost: 0 });
   visited[startY][startX] = true;
   while (queue.length) {
-    queue.sort((a, b) => a.cost - b.cost);
-    const { y, x, path, cost } = queue.shift()!;
+    const { y, x, path, cost } = queue.pop()!;
     if (!isLand[y][x]) {
       return path;
     }
-    // 探索順序をランダムにシャッフル
     const neighbors: [number, number][] = [[1,0],[-1,0],[0,1],[0,-1]];
     shuffle(neighbors, rng);
     for (const [dy, dx] of neighbors) {
@@ -104,7 +137,6 @@ function findRiverPathBFS(
       const diff = heightMap[ny][nx] - heightMap[y][x];
       if (diff < 0 || diff <= allowUp) {
         visited[ny][nx] = true;
-        // ランダムな微小揺らぎを加える
         const stepCost = (diff < 0 ? 0 : diff * 10) + rng() * 0.1;
         queue.push({
           y: ny,
